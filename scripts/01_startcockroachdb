@@ -1,0 +1,51 @@
+// run insecure cockroachdb cluster on on docker node
+// this is for local testing
+// documentation can be found under https://www.cockroachlabs.com/docs/stable/start-a-local-cluster-in-docker-linux.html
+
+
+// Pull newest cockroachdb image from dockerhub
+docker pull cockroachdb/cockroach
+
+// create a network bridge
+docker network create -d bridge roachnet
+
+// Start the cluster
+// Start first node
+docker run -d \
+--name=roach1 \
+--hostname=roach1 \
+--net=roachnet \
+-p 26257:26257 -p 8080:8080  \
+-v "${PWD}/cockroach-data/roach1:/cockroach/cockroach-data"  \
+cockroachdb/cockroach start \
+--insecure \
+--join=roach1,roach2,roach3
+
+// start second node 
+docker run -d \
+--name=roach2 \
+--hostname=roach2 \
+--net=roachnet \
+-v "${PWD}/cockroach-data/roach2:/cockroach/cockroach-data" \
+cockroachdb/cockroach start \
+--insecure \
+--join=roach1,roach2,roach3
+
+// start third node
+docker run -d \
+--name=roach3 \
+--hostname=roach3 \
+--net=roachnet \
+-v "${PWD}/cockroach-data/roach3:/cockroach/cockroach-data" \
+cockroachdb/cockroach start \
+--insecure \
+--join=roach1,roach2,roach3
+
+// perform one-time initialization
+docker exec -it roach1 ./cockroach init --insecure
+
+// get startup details
+grep 'node starting' cockroach-data/roach1/logs/cockroach.log -A 11
+
+// connect to cockroachdb
+docker exec -it roach1 ./cockroach sql --insecure

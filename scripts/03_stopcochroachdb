@@ -1,0 +1,10 @@
+// This file constains the docker commands to stop and remove the the cockroachdb
+
+// Stop all three running nodes
+docker stop roach1 roach2 roach3
+
+// Remove the container from docker
+docker rm roach1 roach2 roach3
+
+// Remove the files of the db
+rm -rf cockroach-data
