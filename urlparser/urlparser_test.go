@@ -26,7 +26,7 @@ func TestGetYear(t *testing.T) {
 func TestGetDay(t *testing.T) {
 	tn := time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC)
 
-	v := getYear(tn)
+	v := getDay(tn)
 	if v != 1 {
 		t.Error("Expected 1, got ", v)
 	}
@@ -74,17 +74,17 @@ func TestGetDayOfCW(t *testing.T) {
 
 	// Test for friday
 	v2 := getDayOfCW(tn, 5)
-	if v2 != time.Date(2020, time.January, 4, 0, 0, 0, 0, time.UTC) {
+	if v2 != time.Date(2020, time.January, 3, 0, 0, 0, 0, time.UTC) {
 		t.Error("Expected 2020-01-03 00:00:00 +0000 UTC, got ", v2)
 	}
 }
 
 func TestParseURL(t *testing.T) {
 	tn := time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC)
-	url := "https://testdomain.test/{year}/{intmonth}"
+	url := "https://testdomain.test/{year}/{intmonth}/{fridaydate}"
 
 	v := ParseURL(url, tn)
-	if v != "https://testdomain.test/2020/1" {
+	if v != "https://testdomain.test/2020/1/3.1." {
 		t.Error("Expected 1, got ", v)
 	}
 }

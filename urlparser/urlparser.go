@@ -1,6 +1,7 @@
 package urlparser
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -61,6 +62,14 @@ func ParseURL(url string, t time.Time) string {
 
 	newurl := strings.Replace(url, "{year}", strconv.Itoa(getYear(t)), -1)
 	newurl = strings.Replace(newurl, "{intmonth}", strconv.Itoa(getIntMonth(t)), -1)
+	if strings.Contains(newurl, "{mondaydate}") {
+		a, b := getDayAndMonth(getDayOfCW(t, 1))
+		newurl = strings.Replace(newurl, "{mondaydate}", fmt.Sprintf("%d.%d.", a, b), -1)
+	}
+	if strings.Contains(newurl, "{fridaydate}") {
+		a, b := getDayAndMonth(getDayOfCW(t, 5))
+		newurl = strings.Replace(newurl, "{fridaydate}", fmt.Sprintf("%d.%d.", a, b), -1)
+	}
 
 	return newurl
 }
