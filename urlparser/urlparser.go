@@ -12,6 +12,12 @@ func getCW(t time.Time) int {
 	return week
 }
 
+func getDay(t time.Time) int {
+	day := t.Day()
+
+	return day
+}
+
 func getYear(t time.Time) int {
 	year := t.Year()
 
@@ -28,6 +34,25 @@ func getIntMonth(t time.Time) int {
 	var i int = int(getMonth(t))
 
 	return i
+}
+
+// Return the date of a given Weekday i.e. Monday of the current calenderweek
+// day parameter as describe in Weekday doc (Sunday = 0, ....)
+func getDayOfCW(t time.Time, day int) time.Time {
+	daycurrent := t.Weekday()
+	dayint := int(daycurrent)
+	difference := time.Duration(day - dayint)
+
+	newday := t.Add(time.Hour * 24 * difference)
+
+	return newday
+}
+
+func getDayAndMonth(t time.Time) (day, month int) {
+	day = getDay(t)
+	month = getIntMonth(t)
+
+	return day, month
 }
 
 // ParseURL replaces the placesholder in the url with its correct values
