@@ -12,8 +12,15 @@ import (
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "<h1>What4lunch</h1>")
-	menu := dbaccess.ConnectAndGet()
+	lunch := dbaccess.GetLunch()
 
+	fmt.Fprintf(w, "<h1>Lunch</h1>")
+	for k, v := range lunch {
+		fmt.Fprintf(w, "<a href=%s>%s</a><br/>", urlparser.ParseURL(v, time.Now()), k)
+	}
+
+	fmt.Fprintf(w, "<h1>Menus</h1>")
+	menu := dbaccess.GetMenu()
 	for k, v := range menu {
 		fmt.Fprintf(w, "<a href=%s>%s</a><br/>", urlparser.ParseURL(v, time.Now()), k)
 	}

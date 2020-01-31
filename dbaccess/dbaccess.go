@@ -10,8 +10,22 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func getMenus(db *sql.DB) map[string]string {
-	rows, err := db.Query("SELECT name,url FROM menu_url")
+// GetMenu return all names and urls of all menus
+func GetMenu() map[string]string {
+	db := connect()
+
+	return getMenuList(db, "SELECT name,url FROM menu_url")
+}
+
+// GetLunch return all names and urls of all menus
+func GetLunch() map[string]string {
+	db := connect()
+
+	return getMenuList(db, "SELECT name,url FROM lunch_url")
+}
+
+func getMenuList(db *sql.DB, query string) map[string]string {
+	rows, err := db.Query(query)
 	if err != nil {
 
 		log.Fatal(err)
@@ -40,15 +54,14 @@ func getMenus(db *sql.DB) map[string]string {
 
 }
 
-// ConnectAndGet return the Titles and URLs of all menus save in the DB
-// For this the function establishes a connect with the cockroachdb
-func ConnectAndGet() map[string]string {
+// Initialize the connect to a database which is descibed in dbinfo.txt
+func connect() *sql.DB {
 	db, err := sql.Open("postgres", getDbConnectionString())
 	if err != nil {
 		log.Fatal("error connecting to the database: ", err)
 	}
 
-	return getMenus(db)
+	return db
 
 }
 
