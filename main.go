@@ -28,7 +28,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	log.Output(1, "Starting Webserver...")
+	log.Output(1, "Downloading menus")
+	urlparser.GetMenusFromWww()
+	log.Output(1, "Menus downloaded")
 	http.HandleFunc("/", handler)
 	log.Output(1, "Webserver started")
 	log.Fatal(http.ListenAndServe(":8090", nil))
+
 }

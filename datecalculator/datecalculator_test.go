@@ -8,7 +8,7 @@ import (
 func TestGetCW(t *testing.T) {
 	tn := time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC)
 
-	v := getCW(tn)
+	v := GetCW(tn)
 	if v != 1 {
 		t.Error("Expected 1, got ", v)
 	}

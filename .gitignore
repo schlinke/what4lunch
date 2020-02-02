@@ -17,3 +17,5 @@
 # DB Connection string
 dbinfo.txt
 scripts/02_initdb
+lunch/*
+menu/*

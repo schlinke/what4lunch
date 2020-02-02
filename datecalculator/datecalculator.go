@@ -4,7 +4,8 @@ import (
 	"time"
 )
 
-func getCW(t time.Time) int {
+// GetCW return the current calenderweek
+func GetCW(t time.Time) int {
 	_, week := t.ISOWeek()
 
 	return week
