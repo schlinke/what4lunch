@@ -64,7 +64,7 @@ func TestGetDayAndMonth(t *testing.T) {
 
 func TestGetDayOfCW(t *testing.T) {
 	// The date is Wednesday
-	tn := time.Date(2020, time.January, 1, 0, 0, 0, 0, time.UTC)
+	tn := time.Date(2020, time.January, 5, 0, 0, 0, 0, time.UTC)
 
 	// Test for monday
 	v1 := GetDayOfCW(tn, 1)

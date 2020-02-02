@@ -41,6 +41,9 @@ func GetIntMonth(t time.Time) int {
 func GetDayOfCW(t time.Time, day int) time.Time {
 	daycurrent := t.Weekday()
 	dayint := int(daycurrent)
+	if dayint == 0 {
+		dayint = 7
+	}
 	difference := time.Duration(day - dayint)
 
 	newday := t.Add(time.Hour * 24 * difference)
