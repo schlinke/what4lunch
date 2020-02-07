@@ -3,15 +3,49 @@ package urlparser
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
+
 	dc "github.com/schlinke/what4lunch/datecalculator"
 	"github.com/schlinke/what4lunch/dbaccess"
 )
+
+func findMenuPdf(url string, searchstring string) string {
+	fileurl := ""
+
+	// Request the HTML page.
+	res, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		log.Fatalf("status code error: %d %s", res.StatusCode, res.Status)
+	}
+
+	// Load the HTML document
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	doc.Find("a").Each(func(i int, element *goquery.Selection) {
+		href, _ := element.Attr("href")
+		if matched, _ := regexp.MatchString(searchstring, href); matched {
+			fileurl = href
+			return
+		}
+	})
+
+	return fileurl
+}
 
 // ParseURL replaces the placesholder in the url with its correct values
 // i.e. {year} to 2020
@@ -35,20 +69,26 @@ func ParseURL(url string, t time.Time) string {
 func GetMenusFromWww() {
 	lunch := dbaccess.GetLunch()
 
-	for k, v := range lunch {
+	for _, element := range lunch {
 		path := "lunch/" + strconv.Itoa(dc.GetCW(time.Now()))
-		file := k + ".pdf"
-		downloadMenu(path, file, ParseURL(v, time.Now()))
-
+		file := element.Name + ".pdf"
+		downloadMenu(path, file, findMenuPdf(element.URL, element.Searchstring))
 	}
 
-	menu := dbaccess.GetMenu()
-	for k, v := range menu {
-		path := "menu/" + strconv.Itoa(dc.GetCW(time.Now()))
-		file := k + ".pdf"
-		downloadMenu(path, file, ParseURL(v, time.Now()))
+	// for k, v := range lunch {
+	// 	path := "lunch/" + strconv.Itoa(dc.GetCW(time.Now()))
+	// 	file := k + ".pdf"
+	// 	downloadMenu(path, file, ParseURL(v, time.Now()))
 
-	}
+	// }
+
+	// menu := dbaccess.GetMenu()
+	// for k, v := range menu {
+	// 	path := "menu/" + strconv.Itoa(dc.GetCW(time.Now()))
+	// 	file := k + ".pdf"
+	// 	downloadMenu(path, file, ParseURL(v, time.Now()))
+
+	// }
 }
 
 func checkDir(path string) (err error) {
