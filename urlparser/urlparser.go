@@ -3,15 +3,13 @@ package urlparser
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
-
-	"github.com/PuerkitoBio/goquery"
 
 	dc "github.com/schlinke/what4lunch/datecalculator"
 	"github.com/schlinke/what4lunch/dbaccess"
@@ -19,6 +17,10 @@ import (
 
 func findMenuPdf(url string, searchstring string) string {
 	fileurl := ""
+	r, err := regexp.Compile(searchstring)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Request the HTML page.
 	res, err := http.Get(url)
@@ -30,45 +32,21 @@ func findMenuPdf(url string, searchstring string) string {
 		log.Fatalf("status code error: %d %s", res.StatusCode, res.Status)
 	}
 
-	// Load the HTML document
-	doc, err := goquery.NewDocumentFromReader(res.Body)
+	bodyBytes, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
+	bodyString := string(bodyBytes)
 
-	doc.Find("a").Each(func(i int, element *goquery.Selection) {
-		href, _ := element.Attr("href")
-		if matched, _ := regexp.MatchString(searchstring, href); matched {
-			fileurl = href
-			return
-		}
-	})
+	fileurl = r.FindString(bodyString)
 
 	return fileurl
 }
 
-// ParseURL replaces the placesholder in the url with its correct values
-// i.e. {year} to 2020
-func ParseURL(url string, t time.Time) string {
-
-	newurl := strings.Replace(url, "{year}", strconv.Itoa(dc.GetYear(t)), -1)
-	newurl = strings.Replace(newurl, "{intmonth}", strconv.Itoa(dc.GetIntMonth(t)), -1)
-	if strings.Contains(newurl, "{mondaydate}") {
-		a, b := dc.GetDayAndMonth(dc.GetDayOfCW(t, 1))
-		newurl = strings.Replace(newurl, "{mondaydate}", fmt.Sprintf("%d.%d.", a, b), -1)
-	}
-	if strings.Contains(newurl, "{fridaydate}") {
-		a, b := dc.GetDayAndMonth(dc.GetDayOfCW(t, 5))
-		newurl = strings.Replace(newurl, "{fridaydate}", fmt.Sprintf("%d.%d.", a, b), -1)
-	}
-
-	return newurl
-}
-
 // GetAll downloads all menus save in the DB as Pdf-files
 func GetAll() {
-	GetMenusFromWww()
 	GetLunchFromWww()
+	GetMenusFromWww()
 }
 
 // GetMenusFromWww downloads all current menus with are saved in the db
@@ -94,7 +72,11 @@ func downloadPdf(menu []dbaccess.Menu, folder string) {
 	for _, element := range menu {
 		path := folder + "/" + strconv.Itoa(dc.GetCW(time.Now()))
 		file := element.Name + ".pdf"
-		downloadMenu(path, file, findMenuPdf(element.URL, element.Searchstring))
+		error := downloadMenu(path, file, findMenuPdf(element.URL, element.Searchstring))
+
+		if error != nil {
+			fmt.Println(error)
+		}
 	}
 }
 
