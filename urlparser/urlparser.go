@@ -9,6 +9,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	dc "github.com/schlinke/what4lunch/datecalculator"
@@ -125,4 +126,34 @@ func downloadMenu(path string, file string, url string) (err error) {
 	}
 
 	return nil
+}
+
+// GetLinksLunch does something
+func GetLinksLunch() map[string]string {
+	_, cw := time.Now().ISOWeek()
+	links := make(map[string]string)
+
+	lunchlist := dbaccess.GetLunchNames()
+	for _, element := range lunchlist {
+		filepath := "/lunch/" + strconv.Itoa(cw) + "/" + element + ".pdf"
+		filepath = strings.ReplaceAll(filepath, " ", "_")
+		links[element] = filepath
+	}
+
+	return links
+}
+
+// GetLinksMenu does something
+func GetLinksMenu() map[string]string {
+	_, cw := time.Now().ISOWeek()
+	links := make(map[string]string)
+
+	lunchlist := dbaccess.GetMenuNames()
+	for _, element := range lunchlist {
+		filepath := "/menu/" + strconv.Itoa(cw) + "/" + element + ".pdf"
+		filepath = strings.ReplaceAll(filepath, " ", "_")
+		links[element] = filepath
+	}
+
+	return links
 }

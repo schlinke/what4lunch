@@ -23,11 +23,55 @@ func GetMenu() []Menu {
 	return getMenuList(db, "SELECT name,url,searchstring FROM menu_url")
 }
 
+// GetMenuNames returns a list of all restaurant names strings saves in the menu table
+func GetMenuNames() []string {
+	db := connect()
+
+	return getNameList(db, "SELECT name FROM menu_url")
+}
+
 // GetLunch returns all Lunchmenus from the db
 func GetLunch() []Menu {
 	db := connect()
 
 	return getMenuList(db, "SELECT name,url,searchstring FROM lunch_url")
+}
+
+// GetLunchNames returns a list of all restaurant names strings saves in the lunch table
+func GetLunchNames() []string {
+	db := connect()
+
+	return getNameList(db, "SELECT name FROM lunch_url")
+}
+
+func getNameList(db *sql.DB, query string) []string {
+	var names []string
+
+	rows, err := db.Query(query)
+	if err != nil {
+
+		log.Fatal(err)
+
+	}
+
+	if err != nil {
+
+		log.Fatal(err)
+
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var name string
+		err = rows.Scan(&name)
+		if err != nil {
+			panic(err)
+		}
+		names = append(names, name)
+	}
+
+	return names
+
 }
 
 func getMenuList(db *sql.DB, query string) []Menu {
