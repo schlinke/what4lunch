@@ -130,27 +130,26 @@ func downloadMenu(path string, file string, url string) (err error) {
 
 // GetLinksLunch does something
 func GetLinksLunch() map[string]string {
-	_, cw := time.Now().ISOWeek()
-	links := make(map[string]string)
+	lunch := dbaccess.GetLunchNames()
+	foldername := "lunch"
 
-	lunchlist := dbaccess.GetLunchNames()
-	for _, element := range lunchlist {
-		filepath := "/lunch/" + strconv.Itoa(cw) + "/" + element + ".pdf"
-		filepath = strings.ReplaceAll(filepath, " ", "_")
-		links[element] = filepath
-	}
-
-	return links
+	return getLinks(lunch, foldername)
 }
 
 // GetLinksMenu does something
 func GetLinksMenu() map[string]string {
+	menu := dbaccess.GetMenuNames()
+	foldername := "menu"
+
+	return getLinks(menu, foldername)
+}
+
+func getLinks(list []string, folder string) map[string]string {
 	_, cw := time.Now().ISOWeek()
 	links := make(map[string]string)
 
-	lunchlist := dbaccess.GetMenuNames()
-	for _, element := range lunchlist {
-		filepath := "/menu/" + strconv.Itoa(cw) + "/" + element + ".pdf"
+	for _, element := range list {
+		filepath := "/" + folder + "/" + strconv.Itoa(cw) + "/" + element + ".pdf"
 		filepath = strings.ReplaceAll(filepath, " ", "_")
 		links[element] = filepath
 	}
