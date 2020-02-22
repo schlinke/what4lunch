@@ -65,30 +65,37 @@ func ParseURL(url string, t time.Time) string {
 	return newurl
 }
 
+// GetAll downloads all menus save in the DB as Pdf-files
+func GetAll() {
+	GetMenusFromWww()
+	GetLunchFromWww()
+}
+
 // GetMenusFromWww downloads all current menus with are saved in the db
 func GetMenusFromWww() {
-	lunch := dbaccess.GetLunch()
+	menu := dbaccess.GetMenu()
+	path := "menu"
 
-	for _, element := range lunch {
-		path := "lunch/" + strconv.Itoa(dc.GetCW(time.Now()))
+	downloadPdf(menu, path)
+}
+
+// GetLunchFromWww downloads all current lunch menus with are saved in the db
+func GetLunchFromWww() {
+	lunch := dbaccess.GetLunch()
+	path := "lunch"
+
+	downloadPdf(lunch, path)
+}
+
+// TODO find a better name for this function
+// this function iterate over the list of urls and set the correct path
+// after this the function starts the download
+func downloadPdf(menu []dbaccess.Menu, folder string) {
+	for _, element := range menu {
+		path := folder + "/" + strconv.Itoa(dc.GetCW(time.Now()))
 		file := element.Name + ".pdf"
 		downloadMenu(path, file, findMenuPdf(element.URL, element.Searchstring))
 	}
-
-	// for k, v := range lunch {
-	// 	path := "lunch/" + strconv.Itoa(dc.GetCW(time.Now()))
-	// 	file := k + ".pdf"
-	// 	downloadMenu(path, file, ParseURL(v, time.Now()))
-
-	// }
-
-	// menu := dbaccess.GetMenu()
-	// for k, v := range menu {
-	// 	path := "menu/" + strconv.Itoa(dc.GetCW(time.Now()))
-	// 	file := k + ".pdf"
-	// 	downloadMenu(path, file, ParseURL(v, time.Now()))
-
-	// }
 }
 
 func checkDir(path string) (err error) {
