@@ -3,8 +3,11 @@ package urlparser
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -13,41 +16,68 @@ import (
 	"github.com/schlinke/what4lunch/dbaccess"
 )
 
-// ParseURL replaces the placesholder in the url with its correct values
-// i.e. {year} to 2020
-func ParseURL(url string, t time.Time) string {
-
-	newurl := strings.Replace(url, "{year}", strconv.Itoa(dc.GetYear(t)), -1)
-	newurl = strings.Replace(newurl, "{intmonth}", strconv.Itoa(dc.GetIntMonth(t)), -1)
-	if strings.Contains(newurl, "{mondaydate}") {
-		a, b := dc.GetDayAndMonth(dc.GetDayOfCW(t, 1))
-		newurl = strings.Replace(newurl, "{mondaydate}", fmt.Sprintf("%d.%d.", a, b), -1)
-	}
-	if strings.Contains(newurl, "{fridaydate}") {
-		a, b := dc.GetDayAndMonth(dc.GetDayOfCW(t, 5))
-		newurl = strings.Replace(newurl, "{fridaydate}", fmt.Sprintf("%d.%d.", a, b), -1)
+func findMenuPdf(url string, searchstring string) string {
+	fileurl := ""
+	r, err := regexp.Compile(searchstring)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	return newurl
+	// Request the HTML page.
+	res, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		log.Fatalf("status code error: %d %s", res.StatusCode, res.Status)
+	}
+
+	bodyBytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	bodyString := string(bodyBytes)
+
+	fileurl = r.FindString(bodyString)
+
+	return fileurl
+}
+
+// GetAll downloads all menus save in the DB as Pdf-files
+func GetAll() {
+	GetLunchFromWww()
+	GetMenusFromWww()
 }
 
 // GetMenusFromWww downloads all current menus with are saved in the db
 func GetMenusFromWww() {
-	lunch := dbaccess.GetLunch()
-
-	for k, v := range lunch {
-		path := "lunch/" + strconv.Itoa(dc.GetCW(time.Now()))
-		file := k + ".pdf"
-		downloadMenu(path, file, ParseURL(v, time.Now()))
-
-	}
-
 	menu := dbaccess.GetMenu()
-	for k, v := range menu {
-		path := "menu/" + strconv.Itoa(dc.GetCW(time.Now()))
-		file := k + ".pdf"
-		downloadMenu(path, file, ParseURL(v, time.Now()))
+	path := "menu"
 
+	downloadPdf(menu, path)
+}
+
+// GetLunchFromWww downloads all current lunch menus with are saved in the db
+func GetLunchFromWww() {
+	lunch := dbaccess.GetLunch()
+	path := "lunch"
+
+	downloadPdf(lunch, path)
+}
+
+// TODO find a better name for this function
+// this function iterate over the list of urls and set the correct path
+// after this the function starts the download
+func downloadPdf(menu []dbaccess.Menu, folder string) {
+	for _, element := range menu {
+		path := folder + "/" + strconv.Itoa(dc.GetCW(time.Now()))
+		file := element.Name + ".pdf"
+		error := downloadMenu(path, file, findMenuPdf(element.URL, element.Searchstring))
+
+		if error != nil {
+			fmt.Println(error)
+		}
 	}
 }
 
@@ -96,4 +126,34 @@ func downloadMenu(path string, file string, url string) (err error) {
 	}
 
 	return nil
+}
+
+// GetLinksLunch does something
+func GetLinksLunch() map[string]string {
+	_, cw := time.Now().ISOWeek()
+	links := make(map[string]string)
+
+	lunchlist := dbaccess.GetLunchNames()
+	for _, element := range lunchlist {
+		filepath := "/lunch/" + strconv.Itoa(cw) + "/" + element + ".pdf"
+		filepath = strings.ReplaceAll(filepath, " ", "_")
+		links[element] = filepath
+	}
+
+	return links
+}
+
+// GetLinksMenu does something
+func GetLinksMenu() map[string]string {
+	_, cw := time.Now().ISOWeek()
+	links := make(map[string]string)
+
+	lunchlist := dbaccess.GetMenuNames()
+	for _, element := range lunchlist {
+		filepath := "/menu/" + strconv.Itoa(cw) + "/" + element + ".pdf"
+		filepath = strings.ReplaceAll(filepath, " ", "_")
+		links[element] = filepath
+	}
+
+	return links
 }

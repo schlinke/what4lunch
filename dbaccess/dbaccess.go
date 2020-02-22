@@ -10,21 +10,43 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// GetMenu return all names and urls of all menus
-func GetMenu() map[string]string {
-	db := connect()
-
-	return getMenuList(db, "SELECT name,url FROM menu_url")
+// Menu is a structure containing the name of the restaurant, the url where the menu
+// can be found and a searchstring to find to current menu
+type Menu struct {
+	Name, URL, Searchstring string
 }
 
-// GetLunch return all names and urls of all menus
-func GetLunch() map[string]string {
+// GetMenu returns all Menus from the db
+func GetMenu() []Menu {
 	db := connect()
 
-	return getMenuList(db, "SELECT name,url FROM lunch_url")
+	return getMenuList(db, "SELECT name,url,searchstring FROM menu_url")
 }
 
-func getMenuList(db *sql.DB, query string) map[string]string {
+// GetMenuNames returns a list of all restaurant names strings saves in the menu table
+func GetMenuNames() []string {
+	db := connect()
+
+	return getNameList(db, "SELECT name FROM menu_url")
+}
+
+// GetLunch returns all Lunchmenus from the db
+func GetLunch() []Menu {
+	db := connect()
+
+	return getMenuList(db, "SELECT name,url,searchstring FROM lunch_url")
+}
+
+// GetLunchNames returns a list of all restaurant names strings saves in the lunch table
+func GetLunchNames() []string {
+	db := connect()
+
+	return getNameList(db, "SELECT name FROM lunch_url")
+}
+
+func getNameList(db *sql.DB, query string) []string {
+	var names []string
+
 	rows, err := db.Query(query)
 	if err != nil {
 
@@ -39,15 +61,43 @@ func getMenuList(db *sql.DB, query string) map[string]string {
 	}
 	defer rows.Close()
 
-	menus := make(map[string]string)
-
 	for rows.Next() {
-		var name, url string
-		err = rows.Scan(&name, &url)
+		var name string
+		err = rows.Scan(&name)
 		if err != nil {
 			panic(err)
 		}
-		menus[name] = url
+		names = append(names, name)
+	}
+
+	return names
+
+}
+
+func getMenuList(db *sql.DB, query string) []Menu {
+	var menus []Menu
+
+	rows, err := db.Query(query)
+	if err != nil {
+
+		log.Fatal(err)
+
+	}
+
+	if err != nil {
+
+		log.Fatal(err)
+
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var name, url, searchstring string
+		err = rows.Scan(&name, &url, &searchstring)
+		if err != nil {
+			panic(err)
+		}
+		menus = append(menus, Menu{name, url, searchstring})
 	}
 
 	return menus
